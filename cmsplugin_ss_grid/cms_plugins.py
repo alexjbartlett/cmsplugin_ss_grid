@@ -19,6 +19,28 @@ class ContainerPlugin(CMSPluginBase):
     child_classes = ['ContainerCellPlugin']
     form = ContainerPluginForm
 
+    fieldsets = [
+        (None, {
+            'fields': (
+                ('background_id', 'background_class'),
+                'background_image',
+                'background_color'
+            )
+        }),
+        (_('Style'), {
+            'classes': ('collapse',),
+            'fields': (
+                ('padding_top', 'padding_right', 'padding_bottom', 'padding_left'),
+            )
+        }),
+        (_('Create'), {
+            'classes': ('collapse',),
+            'fields': (
+                'create',
+                ('mobile_size', 'desktop_size')
+            )
+        })
+    ]
 
     def render(self, context, instance, placeholder):
         context.update({
@@ -58,6 +80,23 @@ class ContainerCellPlugin(CMSPluginBase):
 
     require_parent = True
     parent_classes = ['ContainerPlugin']
+
+    fieldsets = [
+        (None, {
+            'fields': (
+                ('size_mobile', 'size_tablet'),
+                ('size_desktop', 'size_large_desktop')
+            )
+        }),
+        (_('Style'), {
+            'classes': ('collapse',),
+            'fields': (
+                'custom_class',
+                ('margin_top', 'margin_right', 'margin_bottom', 'margin_left'),
+                ('padding_top', 'padding_right', 'padding_bottom', 'padding_left')
+            )
+        })
+    ]
 
 
 plugin_pool.register_plugin(ContainerPlugin)

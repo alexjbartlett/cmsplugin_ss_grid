@@ -16,8 +16,25 @@ In your settings.py
         'cmsplugin_ss_grid',
     )
 
+In settings.py:
+
+    CMSPLUGIN_SS_GRID = dict(
+        CELL_DEFAULT_CLASS='class-added-to-all-cells'
+    )
+
+Development
+-----------
+
+We use djangocms-helper to execute django commands and run tests.
+
+To run test:
+
+    djangocms-helper cmsplugin_ss_grid test --cms
 
 
+Create migrations:
+
+    djangocms-helper cmsplugin_ss_grid makemigrations --cms
 
 Tested on
     * Python 2.7. 3.4, 3.5

@@ -12,21 +12,87 @@ from .fields import ColorPickerField
 
 CONFIG = getattr(settings, 'CMSPLUGIN_SS_GRID', {})
 
-BACKGROUND_CLASSES = CONFIG.get('BACKGROUND_CLASSES', [])
-CELL_CLASSES = CONFIG.get('CELL_CLASSES', [])
+CELL_DEFAULT_CLASS = CONFIG.get('CELL_DEFAULT_CLASS')
 
 INHERIT = 0
 SMALL_CELL_WIDTHS = [(w, str(w)) for w in range(1, 13)]
 CELL_WIDTHS = [(INHERIT, 'Inherit')] + SMALL_CELL_WIDTHS
 
 
-@python_2_unicode_compatible
-class Container(CMSPlugin):
-    background_class = models.CharField(
-        _('background class'), choices=BACKGROUND_CLASSES,
-        blank=True, null=True,
-        max_length=255
+class StyleMixin(object):
+    STYLE_FIELDS = []
+
+    @property
+    def style(self):
+        rv = []
+
+        for field_name in self.STYLE_FIELDS:
+            if getattr(self, field_name):
+                style_name = field_name.replace('_', '-')
+                rv.append('{}:{}'.format(style_name, getattr(self, field_name)))
+        return ';'.join(rv)
+
+
+class PaddingMixin(models.Model):
+    STYLE_FIELDS = [
+        'padding_top',
+        'padding_right',
+        'padding_bottom',
+        'padding_left'
+    ]
+
+    class Meta():
+        abstract = True
+
+    padding_top = models.CharField(
+        _('Padding Top'), null=True, blank=True, max_length=50
     )
+
+    padding_right = models.CharField(
+        _('Padding Right'), null=True, blank=True, max_length=50
+    )
+
+    padding_bottom = models.CharField(
+        _('Padding Bottom'), null=True, blank=True, max_length=50
+    )
+
+    padding_left = models.CharField(
+        _('Padding Left'), null=True, blank=True, max_length=50
+    )
+
+
+class MarginMixin(models.Model):
+    STYLE_FIELDS = [
+        'margin_top',
+        'margin_right',
+        'margin_bottom',
+        'margin_left'
+    ]
+
+    class Meta():
+        abstract = True
+
+    margin_top = models.CharField(
+        _('Margin Top'), null=True, blank=True, max_length=50
+    )
+
+    margin_right = models.CharField(
+        _('Margin Right'), null=True, blank=True, max_length=50
+    )
+
+    margin_bottom = models.CharField(
+        _('Margin Bottom'), null=True, blank=True, max_length=50
+    )
+
+    margin_left = models.CharField(
+        _('Margin Left'), null=True, blank=True, max_length=50
+    )
+
+
+@python_2_unicode_compatible
+class Container(StyleMixin, PaddingMixin, CMSPlugin):
+    STYLE_FIELDS = PaddingMixin.STYLE_FIELDS + ['background_color']
+
     background_image = FilerImageField(
         verbose_name=_('Background Image'),
         null=True,
@@ -38,6 +104,17 @@ class Container(CMSPlugin):
         blank=True,
         help_text=_('This can be seen while the image loads or if there is no image')
     )
+    background_class = models.CharField(
+        _('Background Class'),
+        blank=True, null=True,
+        max_length=255
+    )
+    background_id = models.CharField(
+        _('Background ID'),
+        blank=True, null=True,
+        max_length=255,
+        help_text=_('ID applied to the background HTML element')
+    )
 
     @property
     def background_classes(self):
@@ -45,52 +122,60 @@ class Container(CMSPlugin):
 
     @property
     def background_style(self):
-        rv = []
-        if self.background_color:
-            rv.append('background-color:{}'.format(self.background_color))
+        rv = [self.style]
         if self.background_image:
             rv.append("background-image:url('{}')".format(self.background_image.url))
         return ';'.join(rv)
 
     def __str__(self):
-        return self.get_background_class_display() or ''
+        rv = []
+        if self.background_id:
+            rv.append('#{}'.format(self.background_id))
+        if self.background_class:
+            rv.append('.{}'.format(self.background_class))
+        return ' '.join(rv)
 
 
 @python_2_unicode_compatible
-class ContainerCell(CMSPlugin):
+class ContainerCell(StyleMixin, PaddingMixin, MarginMixin, CMSPlugin):
+    STYLE_FIELDS = PaddingMixin.STYLE_FIELDS + MarginMixin.STYLE_FIELDS
+
     size_mobile = models.IntegerField(
-        _('size mobile'),
+        _('Size Mobile'),
         choices=SMALL_CELL_WIDTHS,
         default=12
     )
 
     size_tablet = models.IntegerField(
-        _('size tablet'),
+        _('Size Tablet'),
         choices=CELL_WIDTHS,
         default=INHERIT
     )
 
     size_desktop = models.IntegerField(
-        _('size desktop'),
+        _('Size Desktop'),
         choices=CELL_WIDTHS,
         default=INHERIT
     )
 
     size_large_desktop = models.IntegerField(
-        _('size large desktop'),
+        _('Size Large Desktop'),
         choices=CELL_WIDTHS,
         default=INHERIT
     )
 
     custom_class = models.CharField(
-        _('class'), choices=CELL_CLASSES,
+        _('Class'),
         blank=True, null=True,
         max_length=255
     )
 
     @property
-    def classes(self):
-        rv = ['col-sm-{}'.format(self.size_mobile)]
+    def css_classes(self):
+        rv = []
+        if CELL_DEFAULT_CLASS:
+            rv.append(CELL_DEFAULT_CLASS)
+        rv.append('col-sm-{}'.format(self.size_mobile))
         if self.size_tablet:
             rv.append('col-md-{}'.format(self.size_tablet))
         if self.size_desktop:

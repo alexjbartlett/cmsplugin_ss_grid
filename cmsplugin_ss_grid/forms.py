@@ -21,15 +21,13 @@ class ContainerPluginForm(forms.ModelForm):
     mobile_size = forms.ChoiceField(
         choices=NUM_COLUMNS, label=_('Mobile Cell Width'),
         help_text=('Width of created cells on a mobile device.  '
-                   '12 is full page width. '
-                   'You can still change this later.'),
+                   '12 is full page width.'),
         initial=12
     )
     desktop_size = forms.ChoiceField(
         choices=NUM_COLUMNS, label=_('Desktop Cell Width'),
         help_text=('Width of created cells on a desktop.  '
-                   '12 is full page width. '
-                   'You can still change this later.'),
+                   '12 is full page width.'),
         initial=12
     )
 
